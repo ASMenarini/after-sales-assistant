@@ -20,6 +20,28 @@
 .history-block strong{display:block;color:#a9c8f6;margin-bottom:5px}.priority-tag{border:1px solid #52637a;border-radius:12px;padding:2px 8px;font-size:11px;display:inline-block;margin-top:6px}
 #syncMsg{font-size:12px;color:#bad5fa;flex-basis:100%}
 @media(max-width:900px){#detail{scroll-margin-top:12px}.history-card{margin:8px 0}}
+
+/* V9: cronologia essenziale; lettura estesa in finestra centrale */
+.history-compact{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.history-entry{width:100%;text-align:left;background:#101c30;border:1px solid #314561;border-radius:10px;padding:10px 12px;color:#eaf0fb;display:flex;flex-direction:column;gap:4px}
+.history-entry:hover,.history-entry:focus-visible{border-color:#79adff;background:#1b304b}
+.history-entry .hdate{font-size:11px;color:#9db5d7}.history-entry .hname{font-weight:700;font-size:13px}
+.history-entry .hpreview{font-size:12px;color:#b7c9e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.history-admin{margin-top:12px;border-top:1px solid #324360;padding-top:9px}
+.history-admin summary{cursor:pointer;font-size:12px;color:#9db5d7}
+.history-admin .history-entry{margin-top:7px}
+.history-dialog{border:1px solid #4a6388;border-radius:18px;background:#101c30;color:#eaf0fb;width:min(860px,calc(100% - 24px));max-height:88vh;padding:0;box-shadow:0 30px 100px #000b}
+.history-dialog::backdrop{background:rgba(3,9,20,.78)}
+.history-dialog-head{position:sticky;top:0;z-index:2;background:#101c30;padding:20px 22px 14px;border-bottom:1px solid #324867;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.history-dialog-head h2{margin:3px 0 6px;font-size:21px;line-height:1.3}
+.history-dialog-body{padding:18px 22px 26px;overflow:auto;max-height:calc(88vh - 112px)}
+.history-section{margin:0 0 17px;background:#192a43;border:1px solid #304663;border-radius:12px;padding:14px 16px}
+.history-section h3{margin:0 0 10px;color:#b2d0ff;font-size:15px}
+.history-section p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+.history-topic{border-top:1px solid #344965;padding:11px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+.history-topic:first-of-type{border-top:0;padding-top:0}
+.history-topic strong{display:block;color:#f0f5ff;margin-bottom:4px}
+@media(max-width:600px){.history-dialog-head{padding:13px}.history-dialog-body{padding:12px}.history-dialog-head h2{font-size:18px}}
 </style></head><body><main class="wrap"><header class="top"><div><div class="brand">After Sales <span style="color:#70afff">Assistant</span></div><div class="muted small">Registro attività · storico · appunti rapidi</div></div><div><span id="who" class="pill">Non collegato</span> <button id="logout" class="ghost hidden">Esci</button></div></header>
 <section id="setup" class="panel section"><h2>1. Collega Supabase</h2><p class="muted">Inserisci esclusivamente Project URL e chiave <b>publishable / anon</b>. Non inserire mai service_role o secret key. I dati aziendali non sono inclusi nel file.</p><div class="fields"><label>Project URL<input id="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label><label>Publishable / anon key<input id="key" type="password" placeholder="sb_publishable_... oppure eyJ..." autocomplete="off"></label></div><p><button id="connect">Memorizza sul dispositivo</button> <button id="clear" class="ghost">Cancella configurazione</button></p><div id="setupMsg" class="muted small"></div></section>
 <section id="auth" class="panel section hidden"><h2>2. Accedi</h2><p class="muted">Usa l'utente creato in Supabase Authentication. Se l'invito non è stato completato, l'accesso potrebbe non funzionare finché non imposti una password.</p><div class="fields"><label>Email<input id="email" type="email" autocomplete="username"></label><label>Password<input id="password" type="password" autocomplete="current-password"></label></div><p><button id="login">Accedi</button> <button id="showSetup" class="ghost">Configurazione</button></p><div id="authMsg" class="muted small"></div></section>
@@ -38,7 +60,7 @@
 <div class="note-toolbar"><h3 style="margin:0">Archivio appunti</h3><input id="noteSearch" type="search" placeholder="Cerca testo, decisioni, persone..."></div>
 <div class="note-filter"><select id="noteTypeFilter"><option value="">Tutti i tipi</option><option>Telefonata</option><option>Riunione</option><option value="Appunto">Nota rapida</option><option>Promemoria</option></select><select id="noteActivityFilter"><option value="">Tutte le attività</option><option value="__none__">Non collegate</option></select><select id="notePeriod"><option value="">Tutte le date</option><option value="7">Ultimi 7 giorni</option><option value="30">Ultimi 30 giorni</option><option value="90">Ultimi 90 giorni</option></select></div>
 <div id="noteList"></div></div>
-</section><p id="globalMsg" class="footer"></p><footer class="footer">Accesso protetto da Supabase Auth e policy RLS da configurare. Pubblicare il codice non equivale a pubblicare i dati.</footer></main>
+</section><dialog id="historyDialog" class="history-dialog" aria-labelledby="historyDialogTitle"><div class="history-dialog-head"><div><div class="muted small" id="historyDialogMeta"></div><h2 id="historyDialogTitle">Dettaglio storico</h2></div><button id="closeHistoryDialog" class="secondary" type="button" aria-label="Chiudi dettaglio">✕ Chiudi</button></div><div id="historyDialogBody" class="history-dialog-body"></div></dialog><p id="globalMsg" class="footer"></p><footer class="footer">Accesso protetto da Supabase Auth e policy RLS da configurare. Pubblicare il codice non equivale a pubblicare i dati.</footer></main>
 <script type="module">
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 const $=id=>document.getElementById(id); const FIELDS=['title','situation','next_action','people','status','priority','deadline','follow_up','board_lane'];
@@ -102,25 +124,67 @@ function priorityOptions(current){
  const all=(currentValue&&!labels.some(x=>x.toLowerCase()===currentValue.toLowerCase()))?[currentValue,...labels]:labels;
  return all.map(x=>`<option value="${esc(x==='Da definire'?'':x)}" ${x.toLowerCase()===currentValue.toLowerCase()||(!currentValue&&x==='Da definire')?'selected':''}>${esc(x)}</option>`).join('');
 }
-function historyCard(e){
- const raw=String(e.note||'Modifica');
- const source=String(e.source||'App');
- const lines=raw.split(/\n\n+/).map(x=>x.trim()).filter(Boolean);
- const isNote=source.toLowerCase().includes('appunto');
- let title=isNote?(lines[0]||'Appunto'):(raw==='Scheda aggiornata.'?'Scheda aggiornata':(raw==='Attività creata.'?'Attività creata':'Avanzamento'));
- let blocks=[];
- if(isNote){
-   const index=lines.findIndex(x=>/^Decisioni:|^Prossima azione:|^Responsabile:|^Scadenza:/i.test(x));
-   const body=lines.slice(1,index<0?undefined:index).join('\n\n');
-   if(body)blocks.push(['Argomenti / appunti',body]);
-   const rest=index<0?[]:lines.slice(index);
-   for(const field of rest){const m=field.match(/^(Decisioni|Prossima azione|Responsabile|Scadenza):\s*([\s\S]*)$/i);if(m)blocks.push([m[1],m[2]]);else blocks.push(['Altri dettagli',field]);}
- }else blocks.push(['Dettagli',raw]);
- if(!blocks.length)blocks.push(['Appunto',raw]);
- const preview=(blocks.find(x=>x[0]==='Argomenti / appunti')||blocks[0])[1].replace(/\s+/g,' ').slice(0,110);
- return `<details class="history-card"><summary><div style="min-width:0;flex:1"><div class="history-title">${esc(title)}</div><div class="history-sub">${esc(stamp(e.created_at))} · ${esc(source)}</div><div class="history-preview">${esc(preview)}${preview.length===110?'…':''}</div></div></summary><div class="history-expanded">${blocks.map(([heading,body])=>`<div class="history-block"><strong>${esc(heading)}</strong>${esc(body)}</div>`).join('')}</div></details>`;
+function isAdministrativeEvent(e){
+ const note=String(e.note||'').trim().toLowerCase();
+ return note==='scheda aggiornata.'||note==='attività creata.'||note==='attivita creata.';
 }
-function renderDetail(){const a=activities.find(x=>x.id===selected);if(!a){$('detail').innerHTML='<div class="empty">Seleziona un’attività o premi “+ Attività”.</div>';return}const ev=events.filter(x=>x.activity_id===a.id);$('detail').innerHTML=`<div class="row"><h3 style="margin:0">${esc(a.title)}</h3><span class="pill">${esc(a.id)}</span></div><div class="section fields"><label>Titolo<input id="d_title" value="${esc(a.title)}"></label><label>Stato<select id="d_status">${options(['Non iniziata','In corso','In attesa','Completata','Da verificare'],a.status)}</select></label><label>Priorità<select id="d_priority">${priorityOptions(a.priority)}</select></label><label>Persone<input id="d_people" value="${esc(a.people||'')}"></label><label>Scadenza<input id="d_deadline" type="date" value="${esc(a.deadline||'')}"></label><label>Follow-up<input id="d_follow_up" type="date" value="${esc(a.follow_up||'')}"></label></div><label class="small muted">Situazione<textarea id="d_situation">${esc(a.situation||'')}</textarea></label><label class="small muted">Prossima azione<textarea id="d_next_action">${esc(a.next_action||'')}</textarea></label><p><button id="saveActivity">Salva modifiche</button></p><h3>Nuovo avanzamento</h3><textarea id="progress" placeholder="Che cosa è successo? La nota rimane nello storico."></textarea><p><button id="addProgress" class="secondary">Aggiungi allo storico</button></p><h3>Storico (${ev.length})</h3><div class="timeline">${ev.map(e=>historyCard(e)).join('')||'<div class="muted">Nessun evento.</div>'}</div>`;$('saveActivity').onclick=saveActivity;$('addProgress').onclick=addProgress}
+function eventParts(e){
+ const raw=String(e.note||'').trim(),source=String(e.source||'App');
+ const isNote=/appunto/i.test(source);
+ if(!isNote)return {title:raw.startsWith('Scheda aggiornata')?'Scheda aggiornata':raw.startsWith('Attività creata')?'Attività creata':'Avanzamento',body:raw,decisions:'',action:'',owner:'',due:'',isNote:false};
+ const chunks=raw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+ const headings={decisions:'Decisioni',action:'Prossima azione',owner:'Responsabile',due:'Scadenza'};
+ const result={title:'Appunto',body:'',decisions:'',action:'',owner:'',due:'',isNote:true};
+ if(!chunks.length)return result;
+ result.title=chunks.shift();
+ let section='body';
+ for(const chunk of chunks){
+  const found=chunk.match(/^(Decisioni|Prossima azione|Responsabile|Scadenza):\s*([\s\S]*)$/i);
+  if(found){const k={'decisioni':'decisions','prossima azione':'action','responsabile':'owner','scadenza':'due'}[found[1].toLowerCase()];section=k;result[k]+=(result[k]?'\n\n':'')+found[2];}
+  else result[section]+=(result[section]?'\n\n':'')+chunk;
+ }
+ return result;
+}
+function renderTopics(content){
+ const text=String(content||'').trim();if(!text)return '<p class="muted">Nessun testo.</p>';
+ // Suddivisione solo quando l'utente ha effettivamente numerato gli argomenti.
+ const matches=[...text.matchAll(/(?:^|\n)\s*(\d{1,2})[.)]\s+([^\n]*)/g)];
+ if(matches.length<2)return `<p>${esc(text)}</p>`;
+ const prefix=text.slice(0,matches[0].index).trim();
+ let html=prefix?`<p style="margin-bottom:12px">${esc(prefix)}</p>`:'';
+ for(let i=0;i<matches.length;i++){
+  const start=matches[i].index+matches[i][0].length,end=i+1<matches.length?matches[i+1].index:text.length;
+  const heading=matches[i][2].trim(),body=text.slice(start,end).trim();
+  html+=`<div class="history-topic"><strong>${esc(matches[i][1]+'. '+heading)}</strong>${body?`<p>${esc(body)}</p>`:''}</div>`;
+ }
+ return html;
+}
+function historyRow(e){
+ const d=eventParts(e),preview=String(d.body||d.action||d.decisions||e.note||'').replace(/\s+/g,' ').slice(0,95);
+ return `<button type="button" class="history-entry" data-history-id="${esc(e.id)}"><span class="hdate">${esc(stamp(e.created_at))}</span><span class="hname">${esc(d.title||'Appunto')}</span><span class="hpreview">${esc(preview)}${preview.length===95?'…':''}</span></button>`;
+}
+function openHistory(id){
+ const e=events.find(x=>String(x.id)===id);if(!e)return;
+ const d=eventParts(e),section=(heading,content,asTopics=false)=>content?`<section class="history-section"><h3>${esc(heading)}</h3>${asTopics?renderTopics(content):`<p>${esc(content)}</p>`}</section>`:'';
+ $('historyDialogTitle').textContent=d.title||'Dettaglio';
+ $('historyDialogMeta').textContent=stamp(e.created_at)+' · '+String(e.source||'Storico');
+ $('historyDialogBody').innerHTML=(d.isNote?
+ section('Appunti · argomenti',d.body,true)+section('Decisioni prese',d.decisions)+section('Prossima azione',d.action)+section('Responsabile',d.owner)+section('Scadenza',d.due):
+ section(isAdministrativeEvent(e)?'Modifica della scheda':'Avanzamento',d.body,true))||'<p class="muted">Nessun dettaglio disponibile.</p>';
+ $('historyDialog').showModal();
+}
+$('closeHistoryDialog').onclick=()=>$('historyDialog').close();
+$('historyDialog').addEventListener('click',e=>{if(e.target===$('historyDialog'))$('historyDialog').close()});
+function renderDetail(){
+ const a=activities.find(x=>x.id===selected);
+ if(!a){$('detail').innerHTML='<div class="empty">Seleziona un’attività o premi “+ Attività”.</div>';return}
+ const ev=events.filter(x=>x.activity_id===a.id).sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||'')));
+ const main=ev.filter(e=>!isAdministrativeEvent(e)),admin=ev.filter(isAdministrativeEvent);
+ const historyHtml=`<div class="history-compact">${main.map(historyRow).join('')||'<div class="muted small">Nessun appunto o avanzamento.</div>'}</div>${admin.length?`<details class="history-admin"><summary>Modifiche della scheda (${admin.length}) · mostra registro tecnico</summary><div class="history-compact">${admin.map(historyRow).join('')}</div></details>`:''}`;
+ $('detail').innerHTML=`<div class="row"><h3 style="margin:0">${esc(a.title)}</h3><span class="pill">${esc(a.id)}</span></div><div class="section fields"><label>Titolo<input id="d_title" value="${esc(a.title)}"></label><label>Stato<select id="d_status">${options(['Non iniziata','In corso','In attesa','Completata','Da verificare'],a.status)}</select></label><label>Priorità<select id="d_priority">${priorityOptions(a.priority)}</select></label><label>Persone<input id="d_people" value="${esc(a.people||'')}"></label><label>Scadenza<input id="d_deadline" type="date" value="${esc(a.deadline||'')}"></label><label>Follow-up<input id="d_follow_up" type="date" value="${esc(a.follow_up||'')}"></label></div><label class="small muted">Situazione<textarea id="d_situation">${esc(a.situation||'')}</textarea></label><label class="small muted">Prossima azione<textarea id="d_next_action">${esc(a.next_action||'')}</textarea></label><p><button id="saveActivity">Salva modifiche</button></p><h3>Nuovo avanzamento</h3><textarea id="progress" placeholder="Che cosa è successo? La nota rimane nello storico."></textarea><p><button id="addProgress" class="secondary">Aggiungi allo storico</button></p><h3>Storico (${main.length})</h3><p class="muted small">Seleziona una voce per aprirla in una finestra leggibile.</p>${historyHtml}`;
+ $('saveActivity').onclick=saveActivity;$('addProgress').onclick=addProgress;
+ $('detail').querySelectorAll('[data-history-id]').forEach(b=>b.onclick=()=>openHistory(b.dataset.historyId));
+}
 async function saveActivity(){const a=activities.find(x=>x.id===selected),patch={};for(const key of FIELDS){const el=$('d_'+key);if(el)patch[key]=el.value|| (['deadline','follow_up'].includes(key)?null:'')}const changed=Object.keys(patch).some(k=>(patch[k]||'')!==(a[k]||''));if(!changed)return msg('Nessuna modifica da salvare.');try{const before={...a};const {error}=await db.from('activities').update({...patch,revision:(a.revision||0)+1,updated_at:new Date().toISOString(),last_progress_at:new Date().toISOString()}).eq('id',a.id);if(error)throw error;const {error:ee}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note:'Scheda aggiornata.',source:'App',before_data:before,after_data:{...before,...patch}});if(ee)throw Error('Scheda aggiornata ma evento storico non salvato: '+ee.message);await refreshAll();msg('Modifica salvata e registrata nello storico.')}catch(e){msg(e.message)}}
 async function addProgress(){const note=val('progress');if(!note)return msg('Scrivi un avanzamento.');try{const a=activities.find(x=>x.id===selected);const {error}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note,source:'App',before_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up},after_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up}});if(error)throw error;await db.from('activities').update({last_progress_at:new Date().toISOString()}).eq('id',a.id);await refreshAll();msg('Avanzamento salvato.')}catch(e){msg(e.message)}}
 $('newActivity').onclick=async()=>{const title=prompt('Titolo della nuova attività');if(!title?.trim())return;const id='AS-'+crypto.randomUUID().slice(0,8);try{const a={id,title:title.trim(),status:'Non iniziata',board_lane:'plan',board_position:activities.length,revision:0};const {error}=await db.from('activities').insert(a);if(error)throw error;const {error:ee}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:id,note:'Attività creata.',source:'App',after_data:a});if(ee)msg('Attività creata ma evento non inserito: '+ee.message);selected=id;await refreshAll()}catch(e){msg(e.message)}};
