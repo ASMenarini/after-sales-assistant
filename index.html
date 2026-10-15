@@ -5,7 +5,7 @@
 
 .note-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.note-toolbar>*{flex:1;min-width:130px}.note-actions{display:flex;gap:8px;flex-wrap:wrap}.draft-indicator{color:#a6b7d0;font-size:12px;margin:6px 0}.note h4{margin:4px 0 8px}.note-actions button{padding:7px 10px;font-size:12px}.note-content{white-space:pre-wrap;overflow-wrap:anywhere}.quick-area{min-height:190px}.note-match{color:#a8b9d7;font-size:12px;margin-bottom:12px}
 
-.note-form-label{display:block;color:#aec1dd;font-size:12px;margin:12px 0 5px}.note-form-label textarea{margin-top:6px}.note-card-title{font-size:16px;font-weight:700}.note-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.note-chip{font-size:11px;border:1px solid #415576;border-radius:99px;padding:3px 8px}.note-segment{margin-top:8px}.note-segment strong{color:#bccee9}.note-controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.note-controls button{padding:7px 10px;font-size:12px}.note-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.note-filter>*{flex:1;min-width:120px}.note-alert{border:1px solid #395a80;padding:12px;border-radius:10px;margin:10px 0;color:#c6d9f3}#notesView h3{margin-top:24px}
+.voice-options{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}.voice-options label{font-size:12px;color:#b6c8e5;display:flex;align-items:center;gap:7px}.voice-options input{width:auto;accent-color:#3479e8}.voice-options button{font-size:12px;padding:7px 10px}.note-form-label{display:block;color:#aec1dd;font-size:12px;margin:12px 0 5px}.note-form-label textarea{margin-top:6px}.note-card-title{font-size:16px;font-weight:700}.note-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.note-chip{font-size:11px;border:1px solid #415576;border-radius:99px;padding:3px 8px}.note-segment{margin-top:8px}.note-segment strong{color:#bccee9}.note-controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.note-controls button{padding:7px 10px;font-size:12px}.note-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.note-filter>*{flex:1;min-width:120px}.note-alert{border:1px solid #395a80;padding:12px;border-radius:10px;margin:10px 0;color:#c6d9f3}#notesView h3{margin-top:24px}
 </style></head><body><main class="wrap"><header class="top"><div><div class="brand">After Sales <span style="color:#70afff">Assistant</span></div><div class="muted small">Registro attività · storico · appunti rapidi</div></div><div><span id="who" class="pill">Non collegato</span> <button id="logout" class="ghost hidden">Esci</button></div></header>
 <section id="setup" class="panel section"><h2>1. Collega Supabase</h2><p class="muted">Inserisci esclusivamente Project URL e chiave <b>publishable / anon</b>. Non inserire mai service_role o secret key. I dati aziendali non sono inclusi nel file.</p><div class="fields"><label>Project URL<input id="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label><label>Publishable / anon key<input id="key" type="password" placeholder="sb_publishable_... oppure eyJ..." autocomplete="off"></label></div><p><button id="connect">Memorizza sul dispositivo</button> <button id="clear" class="ghost">Cancella configurazione</button></p><div id="setupMsg" class="muted small"></div></section>
 <section id="auth" class="panel section hidden"><h2>2. Accedi</h2><p class="muted">Usa l'utente creato in Supabase Authentication. Se l'invito non è stato completato, l'accesso potrebbe non funzionare finché non imposti una password.</p><div class="fields"><label>Email<input id="email" type="email" autocomplete="username"></label><label>Password<input id="password" type="password" autocomplete="current-password"></label></div><p><button id="login">Accedi</button> <button id="showSetup" class="ghost">Configurazione</button></p><div id="authMsg" class="muted small"></div></section>
@@ -19,6 +19,7 @@
 <div class="fields"><label>Decisioni prese<textarea id="noteDecisions" placeholder="Es. Rinviata approvazione tariffe"></textarea></label><label>Prossima azione<textarea id="noteAction" placeholder="Es. Verificare costi e preparare risposta"></textarea></label></div>
 <div class="fields"><label>Responsabile<input id="noteOwner" placeholder="Es. Eden"></label><label>Scadenza (facoltativa)<input id="noteDue" type="date"></label></div>
 <div id="draftMsg" class="draft-indicator" role="status">Bozza salvata solo su questo dispositivo fino al salvataggio su Supabase.</div>
+<div class="voice-options"><label><input id="voicePunctuation" type="checkbox" checked> Converti «virgola», «punto», «due punti», «vai a capo» in punteggiatura</label><button id="cleanTranscription" type="button" class="ghost">Sistema punteggiatura del testo</button></div>
 <div class="note-actions"><button id="mic" type="button" class="secondary">🎙️ Inizia dettatura</button><button id="saveNote" type="button">Salva appunto</button><button id="clearDraft" type="button" class="ghost">Nuovo / svuota bozza</button></div><p id="voiceMsg" class="muted small" role="status"></p>
 <div class="note-toolbar"><h3 style="margin:0">Archivio appunti</h3><input id="noteSearch" type="search" placeholder="Cerca testo, decisioni, persone..."></div>
 <div class="note-filter"><select id="noteTypeFilter"><option value="">Tutti i tipi</option><option>Telefonata</option><option>Riunione</option><option value="Appunto">Nota rapida</option><option>Promemoria</option></select><select id="noteActivityFilter"><option value="">Tutte le attività</option><option value="__none__">Non collegate</option></select><select id="notePeriod"><option value="">Tutte le date</option><option value="7">Ultimi 7 giorni</option><option value="30">Ultimi 30 giorni</option><option value="90">Ultimi 90 giorni</option></select></div>
@@ -62,7 +63,7 @@ function formatNote(d){return 'ASA_NOTE_V4\n'+JSON.stringify(d)}
 function noteSummary(m){return [m.title||'',m.body,m.decisions?'Decisioni: '+m.decisions:'',m.action?'Prossima azione: '+m.action:'',m.owner?'Responsabile: '+m.owner:'',m.due?'Scadenza: '+date(m.due):''].filter(Boolean).join('\n\n')}
 function saveDraft(){try{localStorage.setItem(draftKey,JSON.stringify({...formData(),editingNoteId}));$('draftMsg').textContent='Bozza locale salvata · '+new Date().toLocaleTimeString('it-IT')}catch(e){$('draftMsg').textContent='Bozza locale non disponibile: salva l’appunto su Supabase.'}}
 function loadDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey)||'null');if(!d)return;applyForm(d);$('noteActivity').dataset.restore=d.activity||'';editingNoteId=d.editingNoteId||null;$('saveNote').textContent=editingNoteId?'Salva modifiche':'Salva appunto';$('draftMsg').textContent='Bozza locale recuperata. Premi Salva per sincronizzarla.'}catch(e){}}
-function applyForm(d){for(const [id,key] of [['noteType','type'],['noteTitle','title'],['quickText','body'],['noteDecisions','decisions'],['noteAction','action'],['noteOwner','owner'],['noteDue','due']])$(id).value=d[key]||'';if(d.activity!==undefined)$('noteActivity').value=d.activity||''}
+function applyForm(d){dictationRange=null;for(const [id,key] of [['noteType','type'],['noteTitle','title'],['quickText','body'],['noteDecisions','decisions'],['noteAction','action'],['noteOwner','owner'],['noteDue','due']])$(id).value=d[key]||'';if(d.activity!==undefined)$('noteActivity').value=d.activity||''}
 function clearDraft(){try{localStorage.removeItem(draftKey)}catch(e){}editingNoteId=null;applyForm({type:'Appunto',title:'',body:'',decisions:'',action:'',owner:'',due:'',activity:''});$('saveNote').textContent='Salva appunto';$('draftMsg').textContent='Nuovo appunto pronto.'}
 function renderNotes(){const opts='<option value="">Nessuna attività</option>'+activities.map(a=>`<option value="${esc(a.id)}">${esc(a.title)}</option>`).join('');const sel=$('noteActivity'),current=sel.dataset.restore??sel.value;sel.innerHTML=opts;sel.value=current||'';delete sel.dataset.restore;const filter=$('noteActivityFilter'),currentF=filter.value;filter.innerHTML='<option value="">Tutte le attività</option><option value="__none__">Non collegate</option>'+activities.map(a=>`<option value="${esc(a.id)}">${esc(a.title)}</option>`).join('');filter.value=currentF;
 const search=val('noteSearch').toLocaleLowerCase('it'),kind=val('noteTypeFilter'),activity=val('noteActivityFilter'),period=Number(val('notePeriod'));const minDate=period?Date.now()-period*86400000:0;
@@ -76,6 +77,81 @@ try{btnDisable(true);const before={...a};const {error}=await db.from('activities
 function btnDisable(state){$('saveNote').disabled=state}
 $('saveNote').onclick=async()=>{const d=formData();if(![d.title,d.body,d.decisions,d.action].some(Boolean))return msg('Inserisci almeno un titolo, un appunto, una decisione o una prossima azione.');const content=formatNote(d);try{btnDisable(true);let error;if(editingNoteId){({error}=await db.from('quick_notes').update({content,activity_id:d.activity||null,title:d.title||null,updated_at:new Date().toISOString()}).eq('id',editingNoteId))}else{({error}=await db.from('quick_notes').insert({content,title:d.title||null,source_type:'text',activity_id:d.activity||null,processing_status:'pending',confirmed:false}))}if(error)throw error;clearDraft();await refreshAll();msg('Appunto salvato e sincronizzato su Supabase.')}catch(e){msg('Appunto non salvato: '+e.message+' — la bozza resta su questo dispositivo.')}finally{btnDisable(false)}};
 for(const id of noteFields)$(id).addEventListener('input',saveDraft);for(const id of ['noteSearch','noteTypeFilter','noteActivityFilter','notePeriod'])$(id).addEventListener('input',renderNotes);$('clearDraft').onclick=()=>{if(confirm('Preparare un nuovo appunto? La bozza attuale non salvata verrà eliminata.'))clearDraft()};loadDraft();
-$('mic').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){$('voiceMsg').textContent='Dettatura non disponibile in questo browser. Usa il microfono della tastiera (anche su iPhone).';return}try{if(recognition){recognition.stop();return}const rec=new SR();recognition=rec;rec.lang='it-IT';rec.continuous=true;rec.interimResults=false;rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal){$('quickText').value+=($('quickText').value?' ':'')+e.results[i][0].transcript;saveDraft()}};rec.onerror=e=>$('voiceMsg').textContent='Microfono: '+e.error;rec.onend=()=>{$('mic').textContent='🎙️ Inizia dettatura';recognition=null};rec.start();$('mic').textContent='■ Ferma dettatura';$('voiceMsg').textContent='Sto ascoltando. Premi Ferma quando hai finito.'}catch(e){recognition=null;$('voiceMsg').textContent=e.message}};
+// Correzione basata su regole locali: non utilizza IA né invia dati a servizi aggiuntivi.
+function cleanSpeech(raw){
+ let t=String(raw||'').trim();
+ if(!$('voicePunctuation').checked)return t;
+ // Comandi composti prima di quelli brevi, per evitare sostituzioni parziali.
+ const commands=[
+  [/\b(?:vai a capo|a capo|nuova riga)\b/giu,'\n'],
+  [/\b(?:nuovo paragrafo|vai a paragrafo)\b/giu,'\n\n'],
+  [/\b(?:punto e virgola)\b/giu,';'],
+  [/\b(?:due punti)\b/giu,':'],
+  [/\b(?:punto interrogativo|punto di domanda)\b/giu,'?'],
+  [/\b(?:punto esclamativo)\b/giu,'!'],
+  [/\b(?:virgola)\b/giu,','],
+  // "punto di vista" e "punto vendita" non sono comandi vocali.
+  [/\b(?:punto)(?!\s+(?:di|vendita|fermo|centrale|debole|forte|critico|zero|a|per|in|su|che))\b/giu,'.']
+ ];
+ for(const [pattern,sign] of commands)t=t.replace(pattern,sign);
+ t=t.replace(/\s+([,;:.!?])/g,'$1').replace(/([,;:.!?])(?=[^\s\n,;:.!?])/g,'$1 ')
+    .replace(/ *\n */g,'\n').replace(/\n{3,}/g,'\n\n').replace(/ {2,}/g,' ')
+    .replace(/\s+([,;:.!?])/g,'$1');
+ // Maiuscola all'inizio, dopo chiusura frase e dopo un nuovo paragrafo.
+ t=t.replace(/(^|[.!?]\s+|\n+)([a-zà-ÿ])/gu,(_,pre,ch)=>pre+ch.toLocaleUpperCase('it-IT'));
+ return t;
+}
+// Memorizza il punto d'inserimento anche se cliccare sul microfono sposta il focus.
+var dictationRange=null;
+const speechArea=$('quickText');
+function rememberDictationRange(){
+ dictationRange={start:speechArea.selectionStart,end:speechArea.selectionEnd};
+}
+for(const eventName of ['click','keyup','select','input','mouseup','touchend']){
+ speechArea.addEventListener(eventName,rememberDictationRange);
+}
+// Il browser puo' spostare il focus sul pulsante PRIMA dell'evento click.
+$('mic').addEventListener('pointerdown',()=>{
+ if(document.activeElement===speechArea)rememberDictationRange();
+});
+function appendDictation(text){
+ const area=speechArea, fragment=cleanSpeech(text);if(!fragment)return;
+ const {start,end}=dictationRange||{start:area.value.length,end:area.value.length};
+ const left=area.value.slice(0,start),right=area.value.slice(end);
+ // Uno spazio soltanto quando necessario: non aggiungerlo prima della punteggiatura.
+ const prefix=left && !/[\s\n]$/.test(left) && !/^[,;:.!?\n]/.test(fragment)?' ':'';
+ const suffix=right && !/^[\s\n,;:.!?]/.test(right) && !/[\s\n]$/.test(fragment)?' ':'';
+ const insertion=prefix+fragment+suffix;
+ area.value=left+insertion+right;
+ const cursor=left.length+prefix.length+fragment.length;
+ dictationRange={start:cursor,end:cursor};
+ // Non rubare il focus: mantieni la posizione per i segmenti successivi.
+ area.setSelectionRange(cursor,cursor);
+ saveDraft();
+}
+$('cleanTranscription').onclick=()=>{
+ if(!$('voicePunctuation').checked){$('voiceMsg').textContent='Attiva prima la conversione della punteggiatura.';return;}
+ const area=$('quickText');if(!area.value.trim())return;
+ // Evita modifiche accidentali del testo archiviato: agisce solo sul campo corrente.
+ area.value=cleanSpeech(area.value);saveDraft();
+ $('voiceMsg').textContent='Punteggiatura sistemata. Controlla il testo prima di salvarlo.';
+};
+$('mic').onclick=()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){$('voiceMsg').textContent='Dettatura non disponibile in questo browser.';return;}
+ try{
+  if(recognition){recognition.stop();return;}
+  const rec=new SR();recognition=rec;
+  rec.lang='it-IT';rec.continuous=true;rec.interimResults=false;
+  rec.maxAlternatives=1;
+  rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){
+    if(e.results[i].isFinal)appendDictation(e.results[i][0].transcript);
+  }};
+  rec.onerror=e=>{$('voiceMsg').textContent='Microfono: '+e.error+'. Verifica i permessi del browser.';};
+  rec.onend=()=>{$('mic').textContent='🎙️ Inizia dettatura';recognition=null;};
+  rec.start();$('mic').textContent='■ Ferma dettatura';
+  $('voiceMsg').textContent='Sto ascoltando in italiano. Di’ «virgola», «punto», «due punti» o «vai a capo». Controlla sempre il testo.';
+ }catch(e){recognition=null;$('voiceMsg').textContent=e.message;}
+};
 $('refresh').onclick=refreshAll;$('search').oninput=renderList;$('filter').onchange=renderList;for(const [btn,section,other] of [['tActivities','activitiesView','notesView'],['tNotes','notesView','activitiesView']])$(btn).onclick=()=>{show(section);show(other,false);$('tActivities').setAttribute('aria-selected',String(btn==='tActivities'));$('tNotes').setAttribute('aria-selected',String(btn==='tNotes'))};init();
 </script></body></html>
