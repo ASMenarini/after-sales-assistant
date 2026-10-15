@@ -34,7 +34,7 @@
 .history-dialog::backdrop{background:rgba(3,9,20,.78)}
 .history-dialog-head{position:sticky;top:0;z-index:2;background:#101c30;padding:20px 22px 14px;border-bottom:1px solid #324867;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .history-dialog-head h2{margin:3px 0 6px;font-size:21px;line-height:1.3}
-.history-dialog-body{padding:18px 22px 26px;overflow:auto;max-height:calc(88vh - 112px)}
+.history-dialog-actions{padding:12px 22px;border-top:1px solid #324867;display:flex;align-items:center;gap:12px;justify-content:flex-end;flex-wrap:wrap}.history-delete{background:#8e303b}.history-delete:hover{background:#aa3b47}.history-delete:disabled{opacity:.55}.history-dialog-body{padding:18px 22px 26px;overflow:auto;max-height:calc(88vh - 112px)}
 .history-section{margin:0 0 17px;background:#192a43;border:1px solid #304663;border-radius:12px;padding:14px 16px}
 .history-section h3{margin:0 0 10px;color:#b2d0ff;font-size:15px}
 .history-section p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
@@ -60,7 +60,7 @@
 <div class="note-toolbar"><h3 style="margin:0">Archivio appunti</h3><input id="noteSearch" type="search" placeholder="Cerca testo, decisioni, persone..."></div>
 <div class="note-filter"><select id="noteTypeFilter"><option value="">Tutti i tipi</option><option>Telefonata</option><option>Riunione</option><option value="Appunto">Nota rapida</option><option>Promemoria</option></select><select id="noteActivityFilter"><option value="">Tutte le attività</option><option value="__none__">Non collegate</option></select><select id="notePeriod"><option value="">Tutte le date</option><option value="7">Ultimi 7 giorni</option><option value="30">Ultimi 30 giorni</option><option value="90">Ultimi 90 giorni</option></select></div>
 <div id="noteList"></div></div>
-</section><dialog id="historyDialog" class="history-dialog" aria-labelledby="historyDialogTitle"><div class="history-dialog-head"><div><div class="muted small" id="historyDialogMeta"></div><h2 id="historyDialogTitle">Dettaglio storico</h2></div><button id="closeHistoryDialog" class="secondary" type="button" aria-label="Chiudi dettaglio">✕ Chiudi</button></div><div id="historyDialogBody" class="history-dialog-body"></div></dialog><p id="globalMsg" class="footer"></p><footer class="footer">Accesso protetto da Supabase Auth e policy RLS da configurare. Pubblicare il codice non equivale a pubblicare i dati.</footer></main>
+</section><dialog id="historyDialog" class="history-dialog" aria-labelledby="historyDialogTitle"><div class="history-dialog-head"><div><div class="muted small" id="historyDialogMeta"></div><h2 id="historyDialogTitle">Dettaglio storico</h2></div><button id="closeHistoryDialog" class="secondary" type="button" aria-label="Chiudi dettaglio">✕ Chiudi</button></div><div id="historyDialogBody" class="history-dialog-body"></div><div class="history-dialog-actions"><span class="muted small" id="historyDeleteMsg" role="status" style="flex:1"></span><button id="deleteHistoryEvent" type="button" class="history-delete hidden">Elimina evento</button></div></dialog><p id="globalMsg" class="footer"></p><footer class="footer">Accesso protetto da Supabase Auth e policy RLS da configurare. Pubblicare il codice non equivale a pubblicare i dati.</footer></main>
 <script type="module">
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 const $=id=>document.getElementById(id); const FIELDS=['title','situation','next_action','people','status','priority','deadline','follow_up','board_lane'];
@@ -163,8 +163,11 @@ function historyRow(e){
  const d=eventParts(e),preview=String(d.body||d.action||d.decisions||e.note||'').replace(/\s+/g,' ').slice(0,95);
  return `<button type="button" class="history-entry" data-history-id="${esc(e.id)}"><span class="hdate">${esc(stamp(e.created_at))}</span><span class="hname">${esc(d.title||'Appunto')}</span><span class="hpreview">${esc(preview)}${preview.length===95?'…':''}</span></button>`;
 }
+let openedHistoryEventId=null;
 function openHistory(id){
  const e=events.find(x=>String(x.id)===id);if(!e)return;
+ openedHistoryEventId=id;
+ const del=$('deleteHistoryEvent');del.classList.toggle('hidden',isAdministrativeEvent(e));del.disabled=false;$('historyDeleteMsg').textContent=isAdministrativeEvent(e)?'Evento tecnico: non eliminabile.':'Eliminazione definitiva solo dopo conferma.';
  const d=eventParts(e),section=(heading,content,asTopics=false)=>content?`<section class="history-section"><h3>${esc(heading)}</h3>${asTopics?renderTopics(content):`<p>${esc(content)}</p>`}</section>`:'';
  $('historyDialogTitle').textContent=d.title||'Dettaglio';
  $('historyDialogMeta').textContent=stamp(e.created_at)+' · '+String(e.source||'Storico');
@@ -173,6 +176,24 @@ function openHistory(id){
  section(isAdministrativeEvent(e)?'Modifica della scheda':'Avanzamento',d.body,true))||'<p class="muted">Nessun dettaglio disponibile.</p>';
  $('historyDialog').showModal();
 }
+$('deleteHistoryEvent').onclick=async()=>{
+ const e=events.find(x=>String(x.id)===openedHistoryEventId);
+ if(!e||isAdministrativeEvent(e))return;
+ const title=eventParts(e).title||'Avanzamento';
+ if(!confirm('Eliminare definitivamente questo evento dello storico?\n\n'+title+' — '+stamp(e.created_at)+'\n\nL’eventuale appunto originale nell’archivio resterà disponibile. Questa operazione non si può annullare.'))return;
+ const btn=$('deleteHistoryEvent');btn.disabled=true;$('historyDeleteMsg').textContent='Eliminazione in corso…';
+ try{
+  const {data,error}=await db.from('activity_events').delete().eq('id',e.id).select('id');
+  if(error)throw error;
+  if(!data||data.length!==1)throw Error('Evento non eliminato: verifica la policy DELETE di Supabase (RLS).');
+  $('historyDialog').close();openedHistoryEventId=null;
+  // Rimuovi immediatamente la voce e ricarica per confermare la sincronizzazione.
+  events=events.filter(x=>String(x.id)!==String(e.id));renderDetail();
+  await refreshAll();msg('Evento storico eliminato. L’eventuale nota originale è rimasta nell’archivio.');
+ }catch(err){ $('historyDeleteMsg').textContent='Errore: '+err.message;msg('Eliminazione non riuscita: '+err.message);}
+ finally{btn.disabled=false;}
+};
+$('historyDialog').addEventListener('close',()=>{openedHistoryEventId=null});
 $('closeHistoryDialog').onclick=()=>$('historyDialog').close();
 $('historyDialog').addEventListener('click',e=>{if(e.target===$('historyDialog'))$('historyDialog').close()});
 function renderDetail(){
