@@ -65,7 +65,7 @@
 <section id="recovery" class="panel section hidden"><h2>Imposta nuova password</h2><p class="muted">Hai aperto un link di recupero Supabase. Scegli una nuova password per accedere ad After Sales Assistant.</p><div class="fields"><label>Nuova password<input id="newPassword" type="password" autocomplete="new-password" minlength="12"></label><label>Conferma password<input id="confirmPassword" type="password" autocomplete="new-password" minlength="12"></label></div><p><button id="setPassword">Salva nuova password</button></p><div id="recoveryMsg" class="muted small" role="status"></div></section>
 <section id="app" class="hidden"><div class="grid"><button type="button" class="card kpi" data-kpi="all" aria-pressed="false"><div class="muted small">Attività totali</div><div id="mTotal" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="ongoing" aria-pressed="false"><div class="muted small">In corso</div><div id="mOngoing" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="waiting" aria-pressed="false"><div class="muted small">In attesa</div><div id="mWaiting" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="late" aria-pressed="false"><div class="muted small">Scadenze passate</div><div id="mLate" class="metric">—</div></button></div><div class="tabs"><button id="tActivities" aria-selected="true">Attività</button><button id="tNotes" aria-selected="false">Appunto rapido</button></div>
 <div id="activitiesView"><div class="controls"><input id="search" style="flex:1;min-width:180px" placeholder="Cerca titolo, persone, prossima azione"><select id="filter" style="max-width:175px"><option value="">Tutti gli stati</option><option>Non iniziata</option><option>In corso</option><option>In attesa</option><option>Completata</option></select><button id="refresh" class="secondary">↻ Sincronizza</button><span id="syncMsg" role="status" aria-live="polite"></span><button id="newActivity">+ Attività</button></div><div class="layout"><section class="panel"><div class="section-toolbar"><h3 style="margin:0">Attività <span id="resultCount" class="muted small"></span></h3><button id="toggleCompleted" type="button">Completate</button></div><p class="lane-help">Trascina le schede tra le sezioni, oppure usa ▲ ▼ e ◀ ▶. L’ordine si salva in Supabase.</p><div id="boardMsg" class="draft-indicator" role="status" aria-live="polite"></div><div id="list"></div></section><section class="panel"><div id="detail" class="empty">Seleziona un'attività per vedere i dettagli e lo storico.</div></section></div></div>
-<button type="button" id="floatingCapture" class="mobile-capture-btn hidden">🎙️ Nuova nota</button><nav id="mobileCaptureBar" class="mobile-capture-bar hidden" aria-label="Navigazione mobile"><button id="mobileGoActivities" type="button" class="secondary">Attività</button><button id="mobileGoCapture" type="button">🎙️ Nuova nota</button><button id="mobileGoArchive" type="button" class="secondary">Archivio</button></nav>
+<nav id="mobileCaptureBar" class="mobile-capture-bar hidden" aria-label="Navigazione mobile"><button id="mobileGoActivities" type="button" class="secondary">Attività</button><button id="mobileGoCapture" type="button">🎙️ Nuova nota</button><button id="mobileGoArchive" type="button" class="secondary">Archivio</button></nav>
 <div id="notesView" class="panel hidden"><div class="quick-capture" id="quickCapture"><h3>🎙️ Cattura rapida</h3><div class="quick-help">Prima registra le idee, poi organizzale con calma. La trascrizione dipende dal browser e non crea un file audio.</div><div class="capture-actions"><button type="button" id="captureStart">🎙️ Inizia dettatura</button><button type="button" id="captureSave" class="secondary">✓ Salva subito</button></div><div id="captureStatus" role="status" aria-live="polite"></div><button type="button" id="toggleCaptureDetails" class="ghost">Organizza automaticamente ▾</button></div><div id="captureExtra" class="capture-extra"><p id="organizeFeedback" class="organize-feedback" role="status"></p><h2>Appunti · riunioni e telefonate</h2><p class="muted">Scrivi o detta liberamente. Compila le decisioni e le prossime azioni quando hai tempo; nessuna IA, nessuna elaborazione esterna. La dettatura dipende dal browser.</p>
 <div class="fields"><label>Tipo di appunto<select id="noteType"><option value="Appunto">Nota rapida</option><option value="Telefonata">Telefonata</option><option value="Riunione">Riunione</option><option value="Promemoria">Promemoria</option></select></label><label>Titolo (facoltativo)<input id="noteTitle" placeholder="Es. Telefonata con Officina Miotto"></label></div>
 <label class="note-form-label">Attività collegata<select id="noteActivity"><option value="">Nessuna attività</option></select></label>
@@ -442,56 +442,100 @@ $('cleanTranscription').onclick=()=>{
  area.value=cleanSpeech(area.value);saveDraft();
  $('voiceMsg').textContent='Punteggiatura sistemata. Controlla il testo prima di salvarlo.';
 };
-$('mic').onclick=()=>{
+// Un unico stato per i due pulsanti (modulo completo e cattura rapida).
+let voiceStopping=false;
+function voiceControls(){
+ const active=!!recognition;
+ const label=voiceStopping?'… Arresto in corso':active?'■ Ferma dettatura':'🎙️ Inizia dettatura';
+ for(const id of ['mic','captureStart']){$(id).textContent=label;$(id).disabled=voiceStopping;}
+}
+function voiceStatus(message){$('voiceMsg').textContent=message;$('captureStatus').textContent=message;}
+function toggleVoice(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){$('voiceMsg').textContent='Dettatura non disponibile in questo browser.';return;}
+ if(!SR){voiceStatus('Dettatura non disponibile in questo browser.');return;}
+ if(voiceStopping)return;
+ if(recognition){
+  voiceStopping=true;
+  voiceControls();
+  voiceStatus('Sto fermando la dettatura… Attendi che il pulsante torni su «Inizia dettatura».');
+  try{recognition.stop();}catch(e){recognition=null;voiceStopping=false;voiceControls();voiceStatus('Arresto del microfono: '+e.message);}
+  return;
+ }
  try{
-  if(recognition){recognition.stop();return;}
-  const rec=new SR();recognition=rec;
-  rec.lang='it-IT';rec.continuous=true;rec.interimResults=false;
-  rec.maxAlternatives=1;
+  const rec=new SR();
+  recognition=rec;
+  rec.lang='it-IT';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
   rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){
-    if(e.results[i].isFinal)appendDictation(e.results[i][0].transcript);
+   if(e.results[i].isFinal)appendDictation(e.results[i][0].transcript);
   }};
-  rec.onerror=e=>{$('voiceMsg').textContent='Microfono: '+e.error+'. Verifica i permessi del browser.';};
-  rec.onend=()=>{$('mic').textContent='🎙️ Inizia dettatura';recognition=null;};
-  rec.start();$('mic').textContent='■ Ferma dettatura';
-  $('voiceMsg').textContent='Sto ascoltando in italiano. Di’ «virgola», «punto», «due punti» o «vai a capo». Controlla sempre il testo.';
- }catch(e){recognition=null;$('voiceMsg').textContent=e.message;}
-};
+  rec.onerror=e=>{if(recognition===rec)voiceStatus('Microfono: '+e.error+'. Verifica i permessi del browser.');};
+  rec.onend=()=>{
+   if(recognition!==rec)return;
+   recognition=null;voiceStopping=false;
+   voiceControls();
+   if(!$('voiceMsg').textContent.startsWith('Microfono:'))voiceStatus('Dettatura terminata. Puoi premere di nuovo «Inizia dettatura» per continuare lo stesso appunto.');
+  };
+  rec.start();
+  voiceControls();
+  voiceStatus('Sto ascoltando in italiano. Puoi fermare e riprendere la dettatura senza perdere il testo.');
+ }catch(e){recognition=null;voiceStopping=false;voiceControls();voiceStatus('Impossibile avviare la dettatura: '+e.message);}
+}
+$('mic').onclick=toggleVoice;
 // Cattura rapida: mostra solo trascrizione e comandi principali fino a organizzazione volontaria.
 const captureExtra=$('captureExtra'),captureDetails=$('captureDetails');
-function setCaptureDetails(open){captureExtra.classList.toggle('open',open);captureDetails.classList.toggle('open',open);$('toggleCaptureDetails').textContent=open?'Nascondi dettagli ▴':'Organizza automaticamente ▾';}
+function setCaptureDetails(open){captureExtra.classList.toggle('open',open);captureDetails.classList.toggle('open',open);$('toggleCaptureDetails').textContent=open?'↻ Organizza di nuovo':'Organizza automaticamente ▾';}
 function goNotes(focusArea=false,archive=false){show('notesView');show('activitiesView',false);$('tActivities').setAttribute('aria-selected','false');$('tNotes').setAttribute('aria-selected','true');const target=archive?$('noteSearch'):$('quickCapture');target.scrollIntoView({behavior:'smooth',block:'start'});if(focusArea)setTimeout(()=>$('quickText').focus(),200);}
 // Regole locali: suggeriscono sezioni senza inventare informazioni né chiamare servizi esterni.
 function organizeSpeechLocally(){
  const raw=$('quickText').value.trim();
  if(!raw){$('organizeFeedback').textContent='Prima scrivi o detta un appunto.';return;}
- // Spezza a ogni capoverso, elenco puntato o frase terminata da un segno di punteggiatura.
- const segments=raw.split(/(?:\r?\n)+|(?<=[.!?;])\s+(?=[A-ZÀ-Ú])/u).map(t=>t.trim()).filter(Boolean);
- const decisions=[],actions=[],topics=[],owners=[],deadlines=[];
- const decision=/\b(?:abbiamo deciso|ho deciso|si è deciso|è stato deciso|si è concordato|abbiamo concordato|si è stabilito|abbiamo stabilito|decisione|approvato|non approvare)\b/i;
- const action=/\b(?:devo|dobbiamo|deve|dovrà|dovremo|bisogna|occorre|provvedere|inviare|sollecitare|verificare|preparare|contattare|richiamare|si impegna|mi impegno|da fare|prossima azione)\b/i;
- const deadline=/\b(?:entro (?:il |la |fine |domani|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)|per (?:il |la )|scadenza|entro \d{1,2}[\/.-]\d{1,2})[^.!?;]*/gi;
- segments.forEach(t=>{let category=false;if(decision.test(t)){decisions.push(t);category=true;}if(action.test(t)){actions.push(t);category=true;}if(!category)topics.push(t);for(const m of t.matchAll(deadline))deadlines.push(m[0].trim());});
- const changes=[];
- function assign(id,arr,label){const value=arr.join('\n');if(!value)return;if($(id).value.trim()){changes.push(label+' già compilato (non sovrascritto)');return;}$(id).value=value;changes.push(label+' proposto');}
- assign('noteDecisions',decisions,'Decisioni');assign('noteAction',actions,'Prossima azione');
- // Le scadenze relative non sono trasformate in date senza un'esplicita conferma.
- const noticed=deadlines.length?' Riferimenti temporali nel testo: '+[...new Set(deadlines)].join('; ')+'. Verifica la data manualmente.':'';
- $('organizeFeedback').textContent=(changes.length?changes.join(' · '):'Nessuna decisione o azione riconosciuta: puoi compilare i campi manualmente.')+noticed+' Il testo originale resta invariato.';
+ // Riconosce i segnali anche nei testi dettati senza punti né maiuscole.
+ const markers=[
+  {type:'decision',re:/\b(?:abbiamo deciso(?: di| che)?|ho deciso(?: di| che)?|si è deciso(?: di| che)?|è stato deciso(?: di| che)?|abbiamo concordato(?: di| che)?|si è concordato(?: di| che)?|si è stabilito(?: di| che)?|abbiamo stabilito(?: di| che)?|la decisione è|decisione:?)\b/gi},
+  {type:'action',re:/\b(?:dobbiamo|devo|dovremo|dovrò|deve|dovrà|bisogna|occorre|si impegna a|mi impegno a|prossima azione:?|da fare:?|è necessario)\b/gi}
+ ];
+ const occurrences=[];
+ for(const m of markers){for(const hit of raw.matchAll(m.re))occurrences.push({at:hit.index,type:m.type});}
+ occurrences.sort((x,y)=>x.at-y.at);
+ const segments=[];
+ for(let i=0;i<occurrences.length;i++){
+  const m=occurrences[i],next=occurrences[i+1];
+  const end=next?next.at:raw.length;
+  const span=raw.slice(m.at,end).trim().replace(/[\s,;]+$/,'');
+  if(span)segments.push({...m,text:span});
+ }
+ // Se una decisione e una prossima azione sono nella stessa frase, i due blocchi sono separati.
+ const decisions=segments.filter(x=>x.type==='decision').map(x=>x.text);
+ const actions=segments.filter(x=>x.type==='action').map(x=>x.text);
+ // Fallback: frasi con verbi espliciti, anche senza un indicatore di impegno.
+ if(!actions.length){
+  const sentences=raw.split(/[.!?;\n]+/).map(x=>x.trim()).filter(Boolean);
+  for(const t of sentences){if(/\b(?:sollecitare|verificare|preparare|contattare|richiamare|inviare|provvedere)\b/i.test(t))actions.push(t);}
+ }
+ const updates=[];
+ for(const [id,candidates,label] of [['noteDecisions',decisions,'Decisioni'],['noteAction',actions,'Prossime azioni']]){
+  if(!candidates.length)continue;
+  const field=$(id),value=[...new Set(candidates)].join('\n');
+  if(field.value.trim()){updates.push(label+' già compilato: nessuna sovrascrittura');continue;}
+  field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}));updates.push(label+' compilate');
+ }
+ const dateTokens=[...raw.matchAll(/\b(?:entro (?:il |la |fine |domani|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)|per (?:il |la )|scadenza:?|\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?)\b[^.!?;\n]*/gi)].map(m=>m[0].trim());
+ const dates=dateTokens.length?' Riferimenti temporali (da confermare): '+[...new Set(dateTokens)].join('; ')+'.':'';
+ $('organizeFeedback').textContent=(updates.length?updates.join(' · '):'Non ho riconosciuto decisioni o incarichi espliciti. Prova frasi come «abbiamo deciso di...» e «dobbiamo...».')+dates+' Controlla le proposte prima di salvare. Il testo originale non cambia.';
  saveDraft();
 }
-$('toggleCaptureDetails').onclick=()=>{const opening=!captureExtra.classList.contains('open');setCaptureDetails(opening);if(opening)organizeSpeechLocally();};
-$('captureStart').onclick=()=>{goNotes();$('mic').click();$('captureStart').textContent=recognition?'■ Ferma dettatura':'🎙️ Inizia dettatura';$('captureStatus').textContent=$('voiceMsg').textContent;};
-$('mic').addEventListener('click',()=>setTimeout(()=>{$('captureStart').textContent=recognition?'■ Ferma dettatura':'🎙️ Inizia dettatura';$('captureStatus').textContent=$('voiceMsg').textContent},0));
-$('captureSave').onclick=()=>{if(recognition)recognition.stop();$('saveNote').click()};
+$('toggleCaptureDetails').onclick=()=>{setCaptureDetails(true);organizeSpeechLocally();};
+$('captureStart').onclick=()=>{goNotes();toggleVoice();};
+$('captureSave').onclick=()=>{
+ if(recognition&&!voiceStopping){voiceStopping=true;voiceControls();try{recognition.stop()}catch(e){recognition=null;voiceStopping=false;voiceControls();}}
+ $('saveNote').click();
+};
 $('mobileGoActivities').onclick=()=>{$('tActivities').click();window.scrollTo({top:0,behavior:'smooth'})};
 $('mobileGoCapture').onclick=()=>{if(editingNoteId||formData().body||formData().title){if(!confirm('Iniziare una nuova nota? Prima salva quella che stai scrivendo: le modifiche non salvate della nota corrente andranno perse.'))return;}clearDraft();setCaptureDetails(false);goNotes(true)};
 $('mobileGoArchive').onclick=()=>goNotes(false,true);
-$('floatingCapture').onclick=()=>$('mobileGoCapture').click();
+
 // Nav visibile soltanto con accesso effettuato.
-const captureNavObserver=new MutationObserver(()=>{const on=!$('app').classList.contains('hidden');show('mobileCaptureBar',on);show('floatingCapture',on&&!$('activitiesView').classList.contains('hidden'));});
+const captureNavObserver=new MutationObserver(()=>{const on=!$('app').classList.contains('hidden');show('mobileCaptureBar',on);});
 captureNavObserver.observe($('app'),{attributes:true,attributeFilter:['class']});
 const originalGoActivity=$('tActivities').onclick;
 $('refresh').onclick=refreshAll;$('search').oninput=renderList;$('filter').onchange=renderList;for(const [btn,section,other] of [['tActivities','activitiesView','notesView'],['tNotes','notesView','activitiesView']])$(btn).onclick=()=>{show(section);show(other,false);$('tActivities').setAttribute('aria-selected',String(btn==='tActivities'));$('tNotes').setAttribute('aria-selected',String(btn==='tNotes'));show('floatingCapture',btn==='tActivities')};init();
