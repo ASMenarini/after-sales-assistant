@@ -59,6 +59,16 @@
 .note-compact .note-summary-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-compact .note-chip{flex-shrink:0}
 .organize-feedback{font-size:12px;color:#b5c9e9;margin:9px 0}
+
+.voice-command-help{background:#10243b;border:1px solid #365779;border-radius:11px;margin:12px 0;padding:10px 12px;color:#dceaff}
+.voice-command-help summary{font-weight:700;cursor:pointer;list-style-position:inside}
+.voice-command-help p{font-size:13px;line-height:1.5;margin:9px 0}
+.voice-command-grid{display:grid;grid-template-columns:minmax(110px,.8fr) 1fr;gap:6px 12px;font-size:12px;margin:10px 0}
+.voice-command-grid span{border-bottom:1px solid #29405b;padding:5px 0}
+.voice-preview{background:#101e31;border:1px solid #315274;border-radius:10px;padding:12px;margin-top:12px}
+.voice-preview h4{margin:0 0 7px;color:#c8e2ff}
+.voice-preview ul{margin:0 0 10px;padding-left:20px}
+.voice-preview li{margin:4px 0;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
 </style></head><body><main class="wrap"><header class="top"><div><div class="brand">After Sales <span style="color:#70afff">Assistant</span></div><div class="muted small">Registro attività · storico · appunti rapidi</div></div><div><span id="who" class="pill">Non collegato</span> <button id="logout" class="ghost hidden">Esci</button></div></header>
 <section id="setup" class="panel section"><h2>1. Collega Supabase</h2><p class="muted">Inserisci esclusivamente Project URL e chiave <b>publishable / anon</b>. Non inserire mai service_role o secret key. I dati aziendali non sono inclusi nel file.</p><div class="fields"><label>Project URL<input id="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label><label>Publishable / anon key<input id="key" type="password" placeholder="sb_publishable_... oppure eyJ..." autocomplete="off"></label></div><p><button id="connect">Memorizza sul dispositivo</button> <button id="clear" class="ghost">Cancella configurazione</button></p><div id="setupMsg" class="muted small"></div></section>
 <section id="auth" class="panel section hidden"><h2>2. Accedi</h2><p class="muted">Usa l'utente creato in Supabase Authentication. Se l'invito non è stato completato, l'accesso potrebbe non funzionare finché non imposti una password.</p><div class="fields"><label>Email<input id="email" type="email" autocomplete="username"></label><label>Password<input id="password" type="password" autocomplete="current-password"></label></div><p><button id="login">Accedi</button> <button id="showSetup" class="ghost">Configurazione</button></p><div id="authMsg" class="muted small"></div></section>
@@ -66,7 +76,13 @@
 <section id="app" class="hidden"><div class="grid"><button type="button" class="card kpi" data-kpi="all" aria-pressed="false"><div class="muted small">Attività totali</div><div id="mTotal" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="ongoing" aria-pressed="false"><div class="muted small">In corso</div><div id="mOngoing" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="waiting" aria-pressed="false"><div class="muted small">In attesa</div><div id="mWaiting" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="late" aria-pressed="false"><div class="muted small">Scadenze passate</div><div id="mLate" class="metric">—</div></button></div><div class="tabs"><button id="tActivities" aria-selected="true">Attività</button><button id="tNotes" aria-selected="false">Appunto rapido</button></div>
 <div id="activitiesView"><div class="controls"><input id="search" style="flex:1;min-width:180px" placeholder="Cerca titolo, persone, prossima azione"><select id="filter" style="max-width:175px"><option value="">Tutti gli stati</option><option>Non iniziata</option><option>In corso</option><option>In attesa</option><option>Completata</option></select><button id="refresh" class="secondary">↻ Sincronizza</button><span id="syncMsg" role="status" aria-live="polite"></span><button id="newActivity">+ Attività</button></div><div class="layout"><section class="panel"><div class="section-toolbar"><h3 style="margin:0">Attività <span id="resultCount" class="muted small"></span></h3><button id="toggleCompleted" type="button">Completate</button></div><p class="lane-help">Trascina le schede tra le sezioni, oppure usa ▲ ▼ e ◀ ▶. L’ordine si salva in Supabase.</p><div id="boardMsg" class="draft-indicator" role="status" aria-live="polite"></div><div id="list"></div></section><section class="panel"><div id="detail" class="empty">Seleziona un'attività per vedere i dettagli e lo storico.</div></section></div></div>
 <nav id="mobileCaptureBar" class="mobile-capture-bar hidden" aria-label="Navigazione mobile"><button id="mobileGoActivities" type="button" class="secondary">Attività</button><button id="mobileGoCapture" type="button">🎙️ Nuova nota</button><button id="mobileGoArchive" type="button" class="secondary">Archivio</button></nav>
-<div id="notesView" class="panel hidden"><div class="quick-capture" id="quickCapture"><h3>🎙️ Cattura rapida</h3><div class="quick-help">Prima registra le idee, poi organizzale con calma. La trascrizione dipende dal browser e non crea un file audio.</div><div class="capture-actions"><button type="button" id="captureStart">🎙️ Inizia dettatura</button><button type="button" id="captureSave" class="secondary">✓ Salva subito</button></div><div id="captureStatus" role="status" aria-live="polite"></div><button type="button" id="toggleCaptureDetails" class="ghost">Organizza automaticamente ▾</button></div><div id="captureExtra" class="capture-extra"><p id="organizeFeedback" class="organize-feedback" role="status"></p><h2>Appunti · riunioni e telefonate</h2><p class="muted">Scrivi o detta liberamente. Compila le decisioni e le prossime azioni quando hai tempo; nessuna IA, nessuna elaborazione esterna. La dettatura dipende dal browser.</p>
+<div id="notesView" class="panel hidden"><div class="quick-capture" id="quickCapture"><h3>🎙️ Cattura rapida</h3><div class="quick-help">Prima registra le idee, poi organizzale con calma. La trascrizione dipende dal browser e non crea un file audio.</div><div class="capture-actions"><button type="button" id="captureStart">🎙️ Inizia dettatura</button><button type="button" id="captureSave" class="secondary">✓ Salva subito</button></div><div id="captureStatus" role="status" aria-live="polite"></div>
+<details class="voice-command-help" id="voiceCommandHelp"><summary>🎙️ Promemoria comandi vocali</summary>
+<p>Pronuncia un comando, fai una breve pausa e detta il contenuto. Puoi ripetere i comandi più volte nella stessa nota.</p>
+<div class="voice-command-grid"><span><b>Argomento</b> / Nuovo argomento</span><span>Appunti e temi discussi</span><span><b>Decisione</b> / Nuova decisione</span><span>Decisioni prese</span><span><b>Azione</b> / Nuova azione</span><span>Prossime azioni</span><span><b>Responsabile</b></span><span>Persona incaricata</span><span><b>Scadenza</b></span><span>Data o termine da verificare</span><span><b>Fine nota</b></span><span>Termina la dettatura</span></div>
+<p class="muted small">Esempio: «Argomento, incontro con Q8. Decisione, spedire tramite Menarini. Azione, completare il modulo. Responsabile, Storari».</p>
+<p class="muted small">Premi <b>Organizza automaticamente</b> per suddividere la trascrizione. Il testo dettato resta disponibile per le correzioni.</p></details>
+<button type="button" id="toggleCaptureDetails" class="ghost">Organizza automaticamente ▾</button></div><div id="captureExtra" class="capture-extra"><p id="organizeFeedback" class="organize-feedback" role="status"></p><h2>Appunti · riunioni e telefonate</h2><p class="muted">Scrivi o detta liberamente. Compila le decisioni e le prossime azioni quando hai tempo; nessuna IA, nessuna elaborazione esterna. La dettatura dipende dal browser.</p>
 <div class="fields"><label>Tipo di appunto<select id="noteType"><option value="Appunto">Nota rapida</option><option value="Telefonata">Telefonata</option><option value="Riunione">Riunione</option><option value="Promemoria">Promemoria</option></select></label><label>Titolo (facoltativo)<input id="noteTitle" placeholder="Es. Telefonata con Officina Miotto"></label></div>
 <label class="note-form-label">Attività collegata<select id="noteActivity"><option value="">Nessuna attività</option></select></label>
 </div><label class="note-form-label">Appunti / trascrizione<textarea class="quick-area" id="quickText" placeholder="Cosa è successo? Scrivi liberamente o premi il microfono."></textarea></label>
@@ -466,7 +482,14 @@ function toggleVoice(){
   recognition=rec;
   rec.lang='it-IT';rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
   rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){
-   if(e.results[i].isFinal)appendDictation(e.results[i][0].transcript);
+   if(e.results[i].isFinal){
+    const fragment=e.results[i][0].transcript;
+    appendDictation(fragment);
+    if(/\bfine\s+nota\b/i.test(fragment) && recognition===rec && !voiceStopping){
+     voiceStopping=true;voiceControls();voiceStatus('Comando «Fine nota» riconosciuto: arresto della dettatura…');
+     try{rec.stop()}catch(e){};
+    }
+   }
   }};
   rec.onerror=e=>{if(recognition===rec)voiceStatus('Microfono: '+e.error+'. Verifica i permessi del browser.');};
   rec.onend=()=>{
@@ -486,42 +509,58 @@ const captureExtra=$('captureExtra'),captureDetails=$('captureDetails');
 function setCaptureDetails(open){captureExtra.classList.toggle('open',open);captureDetails.classList.toggle('open',open);$('toggleCaptureDetails').textContent=open?'↻ Organizza di nuovo':'Organizza automaticamente ▾';}
 function goNotes(focusArea=false,archive=false){show('notesView');show('activitiesView',false);$('tActivities').setAttribute('aria-selected','false');$('tNotes').setAttribute('aria-selected','true');const target=archive?$('noteSearch'):$('quickCapture');target.scrollIntoView({behavior:'smooth',block:'start'});if(focusArea)setTimeout(()=>$('quickText').focus(),200);}
 // Regole locali: suggeriscono sezioni senza inventare informazioni né chiamare servizi esterni.
+// La suddivisione segue comandi pronunciati esplicitamente, non prova a dedurre il significato.
+function parseVoiceCommands(raw){
+ const commandPattern=/\b(nuovo\s+argomento|nuova\s+decisione|nuova\s+azione|argomenti?|decisioni?|azioni?|responsabile|scadenza|fine\s+nota)\b\s*(?:(?:due\s+punti|:)\s*)?/gi;
+ const matches=[...raw.matchAll(commandPattern)];
+ const sections={topic:[],decision:[],action:[],owner:[],due:[]};
+ const keyOf=label=>{
+  const x=label.toLowerCase().replace(/\s+/g,' ').trim();
+  if(x.includes('argoment'))return 'topic';
+  if(x.includes('decision'))return 'decision';
+  if(x.includes('azion'))return 'action';
+  if(x==='responsabile')return 'owner';
+  if(x==='scadenza')return 'due';
+  return 'end';
+ };
+ const cleanSegment=value=>value.trim().replace(/^[\s,:;.!?–—-]+|[\s,:;–—-]+$/g,'').trim();
+ for(let i=0;i<matches.length;i++){
+  const current=matches[i],type=keyOf(current[1]);
+  if(type==='end')break;
+  const until=matches[i+1]?.index??raw.length;
+  const value=cleanSegment(raw.slice(current.index+current[0].length,until));
+  if(value)sections[type].push(value);
+ }
+ return {sections,hasCommands:matches.length>0,hasContent:Object.values(sections).some(v=>v.length)};
+}
 function organizeSpeechLocally(){
  const raw=$('quickText').value.trim();
  if(!raw){$('organizeFeedback').textContent='Prima scrivi o detta un appunto.';return;}
- // Riconosce i segnali anche nei testi dettati senza punti né maiuscole.
- const markers=[
-  {type:'decision',re:/\b(?:abbiamo deciso(?: di| che)?|ho deciso(?: di| che)?|si è deciso(?: di| che)?|è stato deciso(?: di| che)?|abbiamo concordato(?: di| che)?|si è concordato(?: di| che)?|si è stabilito(?: di| che)?|abbiamo stabilito(?: di| che)?|la decisione è|decisione:?)\b/gi},
-  {type:'action',re:/\b(?:dobbiamo|devo|dovremo|dovrò|deve|dovrà|bisogna|occorre|si impegna a|mi impegno a|prossima azione:?|da fare:?|è necessario)\b/gi}
- ];
- const occurrences=[];
- for(const m of markers){for(const hit of raw.matchAll(m.re))occurrences.push({at:hit.index,type:m.type});}
- occurrences.sort((x,y)=>x.at-y.at);
- const segments=[];
- for(let i=0;i<occurrences.length;i++){
-  const m=occurrences[i],next=occurrences[i+1];
-  const end=next?next.at:raw.length;
-  const span=raw.slice(m.at,end).trim().replace(/[\s,;]+$/,'');
-  if(span)segments.push({...m,text:span});
- }
- // Se una decisione e una prossima azione sono nella stessa frase, i due blocchi sono separati.
- const decisions=segments.filter(x=>x.type==='decision').map(x=>x.text);
- const actions=segments.filter(x=>x.type==='action').map(x=>x.text);
- // Fallback: frasi con verbi espliciti, anche senza un indicatore di impegno.
- if(!actions.length){
-  const sentences=raw.split(/[.!?;\n]+/).map(x=>x.trim()).filter(Boolean);
-  for(const t of sentences){if(/\b(?:sollecitare|verificare|preparare|contattare|richiamare|inviare|provvedere)\b/i.test(t))actions.push(t);}
- }
+ const {sections,hasCommands,hasContent}=parseVoiceCommands(raw);
  const updates=[];
- for(const [id,candidates,label] of [['noteDecisions',decisions,'Decisioni'],['noteAction',actions,'Prossime azioni']]){
-  if(!candidates.length)continue;
-  const field=$(id),value=[...new Set(candidates)].join('\n');
-  if(field.value.trim()){updates.push(label+' già compilato: nessuna sovrascrittura');continue;}
-  field.value=value;field.dispatchEvent(new Event('input',{bubbles:true}));updates.push(label+' compilate');
+ if(!hasCommands){
+  $('organizeFeedback').textContent='Nessun comando vocale riconosciuto. Prova «Argomento ... Decisione ... Azione ... Responsabile ...». Il testo originale resta intatto.';
+  return;
  }
- const dateTokens=[...raw.matchAll(/\b(?:entro (?:il |la |fine |domani|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)|per (?:il |la )|scadenza:?|\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?)\b[^.!?;\n]*/gi)].map(m=>m[0].trim());
- const dates=dateTokens.length?' Riferimenti temporali (da confermare): '+[...new Set(dateTokens)].join('; ')+'.':'';
- $('organizeFeedback').textContent=(updates.length?updates.join(' · '):'Non ho riconosciuto decisioni o incarichi espliciti. Prova frasi come «abbiamo deciso di...» e «dobbiamo...».')+dates+' Controlla le proposte prima di salvare. Il testo originale non cambia.';
+ const targets=[['decision','noteDecisions','Decisioni'],['action','noteAction','Azioni'],['owner','noteOwner','Responsabile']];
+ for(const [key,id,label] of targets){
+  if(!sections[key].length)continue;
+  const field=$(id);
+  const proposed=sections[key].join('\n');
+  if(field.value.trim() && field.value.trim()!==proposed){updates.push(label+': campo già compilato, non sovrascritto');continue;}
+  field.value=proposed;
+  field.dispatchEvent(new Event('input',{bubbles:true}));
+  updates.push(label+' compilato');
+ }
+ // Non convertire automaticamente date colloquiali o ambigue in date esatte.
+ if(sections.due.length)updates.push('Scadenza individuata: '+sections.due.join('; ')+' (da verificare e inserire)');
+ let preview=$('voiceCommandPreview');
+ if(!preview){preview=document.createElement('div');preview.id='voiceCommandPreview';preview.className='voice-preview';$('organizeFeedback').insertAdjacentElement('afterend',preview);}
+ const safe=x=>esc(x);
+ const labels=[['topic','Argomenti trattati'],['decision','Decisioni prese'],['action','Prossime azioni'],['owner','Responsabili'],['due','Scadenze da confermare']];
+ preview.innerHTML='<h4>Suddivisione proposta dalla dettatura</h4>'+labels.filter(([key])=>sections[key].length).map(([key,label])=>'<b>'+label+'</b><ul>'+sections[key].map(t=>'<li>'+safe(t)+'</li>').join('')+'</ul>').join('');
+ if(!hasContent)preview.innerHTML='<h4>Nessun contenuto dopo i comandi</h4><p>Prova a lasciare una breve pausa dopo ogni comando.</p>';
+ $('organizeFeedback').textContent=(updates.length?updates.join(' · '):'Comandi riconosciuti, controlla la suddivisione proposta.')+' Il testo originale è invariato. Controlla sempre prima di salvare.';
  saveDraft();
 }
 $('toggleCaptureDetails').onclick=()=>{setCaptureDetails(true);organizeSpeechLocally();};
