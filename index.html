@@ -42,19 +42,24 @@
 .history-topic:first-of-type{border-top:0;padding-top:0}
 .history-topic strong{display:block;color:#f0f5ff;margin-bottom:4px}
 @media(max-width:600px){.history-dialog-head{padding:13px}.history-dialog-body{padding:12px}.history-dialog-head h2{font-size:18px}}
- .activity-save-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.danger-action{border-color:#ac5662!important;color:#ffb9c1!important}.danger-action:hover{background:#4a2630!important}</style></head><body><main class="wrap"><header class="top"><div><div class="brand">After Sales <span style="color:#70afff">Assistant</span></div><div class="muted small">Registro attività · storico · appunti rapidi</div></div><div><span id="who" class="pill">Non collegato</span> <button id="logout" class="ghost hidden">Esci</button></div></header>
+ .activity-save-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.danger-action{border-color:#ac5662!important;color:#ffb9c1!important}.danger-action:hover{background:#4a2630!important}
+/* V15 · Cattura rapida mobile */
+.quick-capture{border:1px solid #456c9f;background:linear-gradient(145deg,#142d4d,#15223a);border-radius:18px;padding:18px;margin:12px 0 18px}.quick-capture h3{margin:0 0 7px}.capture-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.capture-actions button{flex:1;min-width:125px}.quick-capture .quick-help{font-size:13px;color:#a9c5e9}.quick-capture #captureStatus{min-height:22px;font-size:13px}.quick-capture textarea{min-height:160px}.capture-extra{display:none}.capture-extra.open{display:block}.mobile-capture-btn{display:none}.mobile-capture-bar{display:none}
+@media(max-width:760px){.wrap{padding-bottom:100px}.mobile-capture-btn{display:block;position:fixed;right:15px;bottom:82px;z-index:35;border-radius:999px;box-shadow:0 6px 22px #0008;font-size:16px;padding:14px 18px}.mobile-capture-bar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:34;background:#101c2f;border-top:1px solid #334765;padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:8px}.mobile-capture-bar button{flex:1;padding:12px 7px;font-size:13px}.mobile-capture-bar.hidden,.mobile-capture-btn.hidden{display:none!important}#notesView{padding:12px}.quick-capture{padding:13px}#quickText{min-height:195px}}
+</style></head><body><main class="wrap"><header class="top"><div><div class="brand">After Sales <span style="color:#70afff">Assistant</span></div><div class="muted small">Registro attività · storico · appunti rapidi</div></div><div><span id="who" class="pill">Non collegato</span> <button id="logout" class="ghost hidden">Esci</button></div></header>
 <section id="setup" class="panel section"><h2>1. Collega Supabase</h2><p class="muted">Inserisci esclusivamente Project URL e chiave <b>publishable / anon</b>. Non inserire mai service_role o secret key. I dati aziendali non sono inclusi nel file.</p><div class="fields"><label>Project URL<input id="url" placeholder="https://xxxx.supabase.co" autocomplete="off"></label><label>Publishable / anon key<input id="key" type="password" placeholder="sb_publishable_... oppure eyJ..." autocomplete="off"></label></div><p><button id="connect">Memorizza sul dispositivo</button> <button id="clear" class="ghost">Cancella configurazione</button></p><div id="setupMsg" class="muted small"></div></section>
 <section id="auth" class="panel section hidden"><h2>2. Accedi</h2><p class="muted">Usa l'utente creato in Supabase Authentication. Se l'invito non è stato completato, l'accesso potrebbe non funzionare finché non imposti una password.</p><div class="fields"><label>Email<input id="email" type="email" autocomplete="username"></label><label>Password<input id="password" type="password" autocomplete="current-password"></label></div><p><button id="login">Accedi</button> <button id="showSetup" class="ghost">Configurazione</button></p><div id="authMsg" class="muted small"></div></section>
 <section id="recovery" class="panel section hidden"><h2>Imposta nuova password</h2><p class="muted">Hai aperto un link di recupero Supabase. Scegli una nuova password per accedere ad After Sales Assistant.</p><div class="fields"><label>Nuova password<input id="newPassword" type="password" autocomplete="new-password" minlength="12"></label><label>Conferma password<input id="confirmPassword" type="password" autocomplete="new-password" minlength="12"></label></div><p><button id="setPassword">Salva nuova password</button></p><div id="recoveryMsg" class="muted small" role="status"></div></section>
 <section id="app" class="hidden"><div class="grid"><button type="button" class="card kpi" data-kpi="all" aria-pressed="false"><div class="muted small">Attività totali</div><div id="mTotal" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="ongoing" aria-pressed="false"><div class="muted small">In corso</div><div id="mOngoing" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="waiting" aria-pressed="false"><div class="muted small">In attesa</div><div id="mWaiting" class="metric">—</div></button><button type="button" class="card kpi" data-kpi="late" aria-pressed="false"><div class="muted small">Scadenze passate</div><div id="mLate" class="metric">—</div></button></div><div class="tabs"><button id="tActivities" aria-selected="true">Attività</button><button id="tNotes" aria-selected="false">Appunto rapido</button></div>
 <div id="activitiesView"><div class="controls"><input id="search" style="flex:1;min-width:180px" placeholder="Cerca titolo, persone, prossima azione"><select id="filter" style="max-width:175px"><option value="">Tutti gli stati</option><option>Non iniziata</option><option>In corso</option><option>In attesa</option><option>Completata</option></select><button id="refresh" class="secondary">↻ Sincronizza</button><span id="syncMsg" role="status" aria-live="polite"></span><button id="newActivity">+ Attività</button></div><div class="layout"><section class="panel"><div class="section-toolbar"><h3 style="margin:0">Attività <span id="resultCount" class="muted small"></span></h3><button id="toggleCompleted" type="button">Completate</button></div><p class="lane-help">Trascina le schede tra le sezioni, oppure usa ▲ ▼ e ◀ ▶. L’ordine si salva in Supabase.</p><div id="boardMsg" class="draft-indicator" role="status" aria-live="polite"></div><div id="list"></div></section><section class="panel"><div id="detail" class="empty">Seleziona un'attività per vedere i dettagli e lo storico.</div></section></div></div>
-<div id="notesView" class="panel hidden"><h2>Appunti · riunioni e telefonate</h2><p class="muted">Scrivi o detta liberamente. Compila le decisioni e le prossime azioni quando hai tempo; nessuna IA, nessuna elaborazione esterna. La dettatura dipende dal browser.</p>
+<button type="button" id="floatingCapture" class="mobile-capture-btn hidden">🎙️ Nuova nota</button><nav id="mobileCaptureBar" class="mobile-capture-bar hidden" aria-label="Navigazione mobile"><button id="mobileGoActivities" type="button" class="secondary">Attività</button><button id="mobileGoCapture" type="button">🎙️ Nuova nota</button><button id="mobileGoArchive" type="button" class="secondary">Archivio</button></nav>
+<div id="notesView" class="panel hidden"><div class="quick-capture" id="quickCapture"><h3>🎙️ Cattura rapida</h3><div class="quick-help">Prima registra le idee, poi organizzale con calma. La trascrizione dipende dal browser e non crea un file audio.</div><div class="capture-actions"><button type="button" id="captureStart">🎙️ Inizia dettatura</button><button type="button" id="captureSave" class="secondary">✓ Salva subito</button></div><div id="captureStatus" role="status" aria-live="polite"></div><button type="button" id="toggleCaptureDetails" class="ghost">Organizza la nota ▾</button></div><div id="captureExtra" class="capture-extra"><h2>Appunti · riunioni e telefonate</h2><p class="muted">Scrivi o detta liberamente. Compila le decisioni e le prossime azioni quando hai tempo; nessuna IA, nessuna elaborazione esterna. La dettatura dipende dal browser.</p>
 <div class="fields"><label>Tipo di appunto<select id="noteType"><option value="Appunto">Nota rapida</option><option value="Telefonata">Telefonata</option><option value="Riunione">Riunione</option><option value="Promemoria">Promemoria</option></select></label><label>Titolo (facoltativo)<input id="noteTitle" placeholder="Es. Telefonata con Officina Miotto"></label></div>
 <label class="note-form-label">Attività collegata<select id="noteActivity"><option value="">Nessuna attività</option></select></label>
-<label class="note-form-label">Appunti / trascrizione<textarea class="quick-area" id="quickText" placeholder="Cosa è successo? Scrivi liberamente o premi il microfono."></textarea></label>
-<div class="fields"><label>Decisioni prese<textarea id="noteDecisions" placeholder="Es. Rinviata approvazione tariffe"></textarea></label><label>Prossima azione<textarea id="noteAction" placeholder="Es. Verificare costi e preparare risposta"></textarea></label></div>
+</div><label class="note-form-label">Appunti / trascrizione<textarea class="quick-area" id="quickText" placeholder="Cosa è successo? Scrivi liberamente o premi il microfono."></textarea></label>
+<div class="capture-extra" id="captureDetails"><div class="fields"><label>Decisioni prese<textarea id="noteDecisions" placeholder="Es. Rinviata approvazione tariffe"></textarea></label><label>Prossima azione<textarea id="noteAction" placeholder="Es. Verificare costi e preparare risposta"></textarea></label></div>
 <div class="fields"><label>Responsabile<input id="noteOwner" placeholder="Es. Eden"></label><label>Scadenza (facoltativa)<input id="noteDue" type="date"></label></div>
-<div id="draftMsg" class="draft-indicator" role="status">Bozza salvata solo su questo dispositivo fino al salvataggio su Supabase.</div>
+</div><div id="draftMsg" class="draft-indicator" role="status">Bozza salvata solo su questo dispositivo fino al salvataggio su Supabase.</div>
 <div class="voice-options"><label><input id="voicePunctuation" type="checkbox" checked> Converti «virgola», «punto», «due punti», «vai a capo» in punteggiatura</label><button id="cleanTranscription" type="button" class="ghost">Sistema punteggiatura del testo</button></div>
 <div class="note-actions"><button id="mic" type="button" class="secondary">🎙️ Inizia dettatura</button><button id="saveNote" type="button">Salva appunto</button><button id="clearDraft" type="button" class="ghost">Nuovo / svuota bozza</button></div><p id="voiceMsg" class="muted small" role="status"></p>
 <div class="note-toolbar"><h3 style="margin:0">Archivio appunti</h3><input id="noteSearch" type="search" placeholder="Cerca testo, decisioni, persone..."></div>
@@ -235,7 +240,7 @@ function renderDetail(){
  const ev=events.filter(x=>x.activity_id===a.id).sort((x,y)=>String(y.created_at||'').localeCompare(String(x.created_at||'')));
  const main=ev.filter(e=>!isAdministrativeEvent(e)),admin=ev.filter(isAdministrativeEvent);
  const historyHtml=`<div class="history-compact">${main.map(historyRow).join('')||'<div class="muted small">Nessun appunto o avanzamento.</div>'}</div>${admin.length?`<details class="history-admin"><summary>Modifiche della scheda (${admin.length}) · mostra registro tecnico</summary><div class="history-compact">${admin.map(historyRow).join('')}</div></details>`:''}`;
- $('detail').innerHTML=`<div class="row"><h3 style="margin:0">${esc(a.title)}</h3><span class="pill">${esc(a.id)}</span></div><div class="section fields"><label>Titolo<input id="d_title" value="${esc(a.title)}"></label><label>Stato<select id="d_status">${options(['Non iniziata','In corso','In attesa','Completata','Da verificare'],a.status)}</select></label><label>Priorità<select id="d_priority">${priorityOptions(a.priority)}</select></label><label>Persone<input id="d_people" value="${esc(a.people||'')}"></label><label>Scadenza<input id="d_deadline" type="date" value="${esc(a.deadline||'')}"></label><label>Follow-up<input id="d_follow_up" type="date" value="${esc(a.follow_up||'')}"></label></div><label class="small muted">Situazione<textarea id="d_situation">${esc(a.situation||'')}</textarea></label><label class="small muted">Prossima azione<textarea id="d_next_action">${esc(a.next_action||'')}</textarea></label><p class="activity-save-actions"><button id="saveActivity">Salva modifiche</button><button id="deleteActivity" type="button" class="ghost danger-action" title="Elimina definitivamente questa attività e il relativo storico">🗑 Elimina attività</button></p><h3>Nuovo avanzamento</h3><textarea id="progress" placeholder="Che cosa è successo? La nota rimane nello storico."></textarea><p><button id="addProgress" class="secondary">Aggiungi allo storico</button></p><h3>Storico (${main.length})</h3><p class="muted small">Seleziona una voce per aprirla in una finestra leggibile.</p>${historyHtml}`;
+ $('detail').innerHTML=`<div class="row"><h3 style="margin:0">${esc(a.title)}</h3><span class="pill">${esc(a.id)}</span></div><div class="section fields"><label>Titolo<input id="d_title" value="${esc(a.title)}"></label><label>Stato<select id="d_status">${options(['Non iniziata','In corso','In attesa','Completata','Da verificare'],a.status)}</select></label><label>Priorità<select id="d_priority">${priorityOptions(a.priority)}</select></label><label>Persone<input id="d_people" value="${esc(a.people||'')}"></label><label>Scadenza<input id="d_deadline" type="date" value="${esc(a.deadline||'')}"></label><label>Follow-up<input id="d_follow_up" type="date" value="${esc(a.follow_up||'')}"></label></div><label class="small muted">Situazione<textarea id="d_situation">${esc(a.situation||'')}</textarea></label><label class="small muted">Prossima azione<textarea id="d_next_action">${esc(a.next_action||'')}</textarea></label><p class="activity-save-actions"><button id="saveActivity">Salva modifiche</button><button id="deleteActivity" type="button" class="ghost danger-action" title="Elimina definitivamente questa attività e il relativo storico">🗑 Elimina attività</button></p><h3>Nuovo avanzamento</h3><textarea id="progress" placeholder="Che cosa è successo? La nota rimane nello storico."></textarea><p><button id="addProgress" type="button" class="secondary">Aggiungi allo storico</button></p><p id="progressSaveMsg" class="muted small" role="status" aria-live="polite"></p><h3>Storico (${main.length})</h3><p class="muted small">Seleziona una voce per aprirla in una finestra leggibile.</p>${historyHtml}`;
  $('detail').dataset.renderedActivity=String(a.id);restoreActivityDraft(a.id);for(const key of activityDraftFields){const el=$('d_'+key);if(el){el.addEventListener('input',captureActivityDraft);el.addEventListener('change',captureActivityDraft)}}$('saveActivity').onclick=saveActivity;$('deleteActivity').onclick=deleteActivity;$('addProgress').onclick=addProgress;
  $('detail').querySelectorAll('[data-history-id]').forEach(b=>b.onclick=()=>openHistory(b.dataset.historyId));
 }
@@ -266,7 +271,41 @@ async function deleteActivity(){
  }
 }
 async function saveActivity(){const a=activities.find(x=>x.id===selected),patch={};for(const key of FIELDS){const el=$('d_'+key);if(el)patch[key]=el.value|| (['deadline','follow_up'].includes(key)?null:'')}const changed=Object.keys(patch).some(k=>(patch[k]||'')!==(a[k]||''));if(!changed)return msg('Nessuna modifica da salvare.');try{const before={...a};const {error}=await db.from('activities').update({...patch,revision:(a.revision||0)+1,updated_at:new Date().toISOString(),last_progress_at:new Date().toISOString()}).eq('id',a.id);if(error)throw error;const {error:ee}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note:'Scheda aggiornata.',source:'App',before_data:before,after_data:{...before,...patch}});if(ee)throw Error('Scheda aggiornata ma evento storico non salvato: '+ee.message);Object.assign(a,patch);localStorage.removeItem(activityDraftKey(a.id));await refreshAll();msg('Modifica salvata e registrata nello storico.')}catch(e){msg(e.message)}}
-async function addProgress(){const note=val('progress');if(!note)return msg('Scrivi un avanzamento.');try{const a=activities.find(x=>x.id===selected);const {error}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note,source:'App',before_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up},after_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up}});if(error)throw error;await db.from('activities').update({last_progress_at:new Date().toISOString()}).eq('id',a.id);await refreshAll();msg('Avanzamento salvato.')}catch(e){msg(e.message)}}
+let progressSaveBusy=false;
+async function addProgress(){
+ const button=$('addProgress'),field=$('progress'),feedback=$('progressSaveMsg');
+ if(progressSaveBusy)return;
+ const note=field?.value.trim()||'';
+ if(!note){if(feedback)feedback.textContent='Scrivi un avanzamento prima di salvarlo.';return;}
+ const a=activities.find(x=>x.id===selected);
+ if(!a){if(feedback)feedback.textContent='Attività non trovata.';return;}
+ progressSaveBusy=true;
+ if(button){button.disabled=true;button.textContent='Salvataggio in corso…';}
+ if(feedback)feedback.textContent='Salvataggio su Supabase in corso…';
+ let inserted=false;
+ try{
+  const {error}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note,source:'App',before_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up},after_data:{status:a.status,next_action:a.next_action,deadline:a.deadline,follow_up:a.follow_up}});
+  if(error)throw error;
+  inserted=true;
+  // L'aggiornamento accessorio non deve far ripetere un inserimento già riuscito.
+  const {error:touchError}=await db.from('activities').update({last_progress_at:new Date().toISOString()}).eq('id',a.id);
+  if(touchError)console.warn('Timestamp attività non aggiornato:',touchError.message);
+  if(field)field.value='';
+  if(feedback)feedback.textContent='✓ Avanzamento salvato. Aggiorno lo storico…';
+  try{await refreshAll();msg('Avanzamento salvato una sola volta.');}
+  catch(reloadError){msg('Avanzamento salvato, ma aggiornamento elenco non riuscito: '+reloadError.message);}
+ }catch(e){
+  const message='Salvataggio non riuscito: '+e.message;
+  if(feedback)feedback.textContent=message;
+  msg(message);
+ }finally{
+  progressSaveBusy=false;
+  const liveButton=$('addProgress');
+  if(liveButton){liveButton.disabled=false;liveButton.textContent='Aggiungi allo storico';}
+  const liveFeedback=$('progressSaveMsg');
+  if(inserted && liveFeedback)liveFeedback.textContent='✓ Avanzamento salvato nello storico.';
+ }
+}
 $('newActivity').onclick=async()=>{const title=prompt('Titolo della nuova attività');if(!title?.trim())return;const id='AS-'+crypto.randomUUID().slice(0,8);try{const a={id,title:title.trim(),status:'Non iniziata',board_lane:'plan',board_position:activities.length,revision:0};const {error}=await db.from('activities').insert(a);if(error)throw error;const {error:ee}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:id,note:'Attività creata.',source:'App',after_data:a});if(ee)msg('Attività creata ma evento non inserito: '+ee.message);selected=id;await refreshAll()}catch(e){msg(e.message)}};
 const draftKey='afterSales_noteDraft_v4',noteFields=['noteType','noteTitle','noteActivity','quickText','noteDecisions','noteAction','noteOwner','noteDue'];
 let editingNoteId=null,recognition=null;
@@ -300,8 +339,32 @@ async function deleteNote(id){
   msg('Appunto eliminato dall’archivio. Eventuali copie nello storico rimangono disponibili.');
  }catch(e){msg('Eliminazione non riuscita: '+e.message);if(button)button.disabled=false;}
 }
-function editNote(id){const n=notes.find(x=>String(x.id)===id);if(!n)return;const m=parseNote(n.content);applyForm({...m,activity:n.activity_id||''});editingNoteId=id;$('saveNote').textContent='Salva modifiche';saveDraft();$('quickText').focus();$('notesView').scrollIntoView({behavior:'smooth',block:'start'});msg('Appunto caricato per la modifica. Le modifiche non sono salvate finché non premi Salva modifiche.')}
-async function noteToProgress(id){const n=notes.find(x=>String(x.id)===id),a=activities.find(x=>x.id===n?.activity_id);if(!n||!a)return msg('Attività non trovata.');const m=parseNote(n.content);if(!confirm('Aggiungere questo appunto allo storico di '+a.title+'? La nota originale rimarrà nell’archivio.'))return;try{btnDisable(true);const {error}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note:noteSummary(m),source:'Appunto',before_data:{status:a.status,next_action:a.next_action},after_data:{status:a.status,next_action:a.next_action}});if(error)throw error;await refreshAll();msg('Appunto copiato nello storico di '+a.title+'.')}catch(e){msg('Errore: '+e.message)}finally{btnDisable(false)}}
+function editNote(id){setCaptureDetails(true);const n=notes.find(x=>String(x.id)===id);if(!n)return;const m=parseNote(n.content);applyForm({...m,activity:n.activity_id||''});editingNoteId=id;$('saveNote').textContent='Salva modifiche';saveDraft();$('quickText').focus();$('notesView').scrollIntoView({behavior:'smooth',block:'start'});msg('Appunto caricato per la modifica. Le modifiche non sono salvate finché non premi Salva modifiche.')}
+const noteProgressSaving=new Set();
+async function noteToProgress(id){
+ if(noteProgressSaving.has(id))return;
+ const n=notes.find(x=>String(x.id)===id),a=activities.find(x=>x.id===n?.activity_id);
+ if(!n||!a)return msg('Attività non trovata.');
+ const m=parseNote(n.content);
+ if(!confirm('Aggiungere questo appunto allo storico di '+a.title+'? La nota originale rimarrà nell’archivio.'))return;
+ noteProgressSaving.add(id);
+ const buttons=Array.from(document.querySelectorAll('[data-progress-note]')).filter(b=>b.dataset.progressNote===id);
+ buttons.forEach(b=>{b.disabled=true;b.textContent='Salvataggio…';});
+ msg('Sto copiando l’appunto nello storico…');
+ let inserted=false;
+ try{
+  const {error}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note:noteSummary(m),source:'Appunto',before_data:{status:a.status,next_action:a.next_action},after_data:{status:a.status,next_action:a.next_action}});
+  if(error)throw error;
+  inserted=true;
+  msg('✓ Appunto copiato nello storico di '+a.title+'.');
+  try{await refreshAll();msg('✓ Appunto copiato nello storico di '+a.title+'.');}
+  catch(e){msg('Appunto copiato, ma impossibile aggiornare l’elenco: '+e.message);}
+ }catch(e){msg('Appunto non copiato: '+e.message);}
+ finally{
+  noteProgressSaving.delete(id);
+  document.querySelectorAll('[data-progress-note]').forEach(b=>{if(b.dataset.progressNote===id){b.disabled=false;b.textContent='Aggiungi allo storico';}});
+ }
+}
 async function applyNoteToActivity(id){const n=notes.find(x=>String(x.id)===id),a=activities.find(x=>x.id===n?.activity_id);if(!n||!a)return msg('Attività non trovata.');const m=parseNote(n.content);if(!m.action&&!m.owner&&!m.due)return msg('Compila almeno prossima azione, responsabile o scadenza nella nota.');const changes={};if(m.action)changes.next_action=m.action;if(m.owner)changes.people=m.owner;if(m.due)changes.follow_up=m.due;const summary=Object.entries(changes).map(([k,v])=>({'next_action':'Prossima azione','people':'Persone','follow_up':'Follow-up'}[k]+': '+v)).join('\n');if(!confirm('Aggiornare "'+a.title+'" con questi dati?\n\n'+summary+'\n\nL’appunto resterà salvato e lo storico registrerà la modifica.'))return;
 try{btnDisable(true);const before={...a};const {error}=await db.from('activities').update({...changes,revision:(a.revision||0)+1,updated_at:new Date().toISOString(),last_progress_at:new Date().toISOString()}).eq('id',a.id);if(error)throw error;const {error:e2}=await db.from('activity_events').insert({id:crypto.randomUUID(),activity_id:a.id,note:noteSummary(m),source:'Appunto strutturato',before_data:before,after_data:{...before,...changes}});if(e2)throw Error('Attività aggiornata, ma registrazione storico non riuscita: '+e2.message);selected=a.id;await refreshAll();msg('Attività aggiornata e storico registrato.')}catch(e){msg('Errore: '+e.message)}finally{btnDisable(false)}}
 function btnDisable(state){$('saveNote').disabled=state}
@@ -383,5 +446,21 @@ $('mic').onclick=()=>{
   $('voiceMsg').textContent='Sto ascoltando in italiano. Di’ «virgola», «punto», «due punti» o «vai a capo». Controlla sempre il testo.';
  }catch(e){recognition=null;$('voiceMsg').textContent=e.message;}
 };
-$('refresh').onclick=refreshAll;$('search').oninput=renderList;$('filter').onchange=renderList;for(const [btn,section,other] of [['tActivities','activitiesView','notesView'],['tNotes','notesView','activitiesView']])$(btn).onclick=()=>{show(section);show(other,false);$('tActivities').setAttribute('aria-selected',String(btn==='tActivities'));$('tNotes').setAttribute('aria-selected',String(btn==='tNotes'))};init();
+// Cattura rapida: mostra solo trascrizione e comandi principali fino a organizzazione volontaria.
+const captureExtra=$('captureExtra'),captureDetails=$('captureDetails');
+function setCaptureDetails(open){captureExtra.classList.toggle('open',open);captureDetails.classList.toggle('open',open);$('toggleCaptureDetails').textContent=open?'Nascondi dettagli ▴':'Organizza la nota ▾';}
+function goNotes(focusArea=false,archive=false){show('notesView');show('activitiesView',false);$('tActivities').setAttribute('aria-selected','false');$('tNotes').setAttribute('aria-selected','true');const target=archive?$('noteSearch'):$('quickCapture');target.scrollIntoView({behavior:'smooth',block:'start'});if(focusArea)setTimeout(()=>$('quickText').focus(),200);}
+$('toggleCaptureDetails').onclick=()=>setCaptureDetails(!captureExtra.classList.contains('open'));
+$('captureStart').onclick=()=>{goNotes();$('mic').click();$('captureStart').textContent=recognition?'■ Ferma dettatura':'🎙️ Inizia dettatura';$('captureStatus').textContent=$('voiceMsg').textContent;};
+$('mic').addEventListener('click',()=>setTimeout(()=>{$('captureStart').textContent=recognition?'■ Ferma dettatura':'🎙️ Inizia dettatura';$('captureStatus').textContent=$('voiceMsg').textContent},0));
+$('captureSave').onclick=()=>{if(recognition)recognition.stop();$('saveNote').click()};
+$('mobileGoActivities').onclick=()=>{$('tActivities').click();window.scrollTo({top:0,behavior:'smooth'})};
+$('mobileGoCapture').onclick=()=>{if(editingNoteId||formData().body||formData().title){if(!confirm('Iniziare una nuova nota? Prima salva quella che stai scrivendo: le modifiche non salvate della nota corrente andranno perse.'))return;}clearDraft();setCaptureDetails(false);goNotes(true)};
+$('mobileGoArchive').onclick=()=>goNotes(false,true);
+$('floatingCapture').onclick=()=>$('mobileGoCapture').click();
+// Nav visibile soltanto con accesso effettuato.
+const captureNavObserver=new MutationObserver(()=>{const on=!$('app').classList.contains('hidden');show('mobileCaptureBar',on);show('floatingCapture',on&&!$('activitiesView').classList.contains('hidden'));});
+captureNavObserver.observe($('app'),{attributes:true,attributeFilter:['class']});
+const originalGoActivity=$('tActivities').onclick;
+$('refresh').onclick=refreshAll;$('search').oninput=renderList;$('filter').onchange=renderList;for(const [btn,section,other] of [['tActivities','activitiesView','notesView'],['tNotes','notesView','activitiesView']])$(btn).onclick=()=>{show(section);show(other,false);$('tActivities').setAttribute('aria-selected',String(btn==='tActivities'));$('tNotes').setAttribute('aria-selected',String(btn==='tNotes'));show('floatingCapture',btn==='tActivities')};init();
 </script></body></html>
